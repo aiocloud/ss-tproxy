@@ -1,0 +1,17 @@
+create privaddr hash:net family inet hashsize 2048 maxelem 65536
+add privaddr 0.0.0.0/8
+add privaddr 10.0.0.0/8
+add privaddr 100.64.0.0/10
+add privaddr 127.0.0.0/8
+add privaddr 169.254.0.0/16
+add privaddr 172.16.0.0/12
+add privaddr 192.0.0.0/24
+add privaddr 192.0.2.0/24
+add privaddr 192.88.99.0/24
+add privaddr 192.168.0.0/16
+add privaddr 198.18.0.0/15
+add privaddr 198.51.100.0/24
+add privaddr 203.0.113.0/24
+add privaddr 224.0.0.0/4
+add privaddr 240.0.0.0/4
+add privaddr 255.255.255.255/32

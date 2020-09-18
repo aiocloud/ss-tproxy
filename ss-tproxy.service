@@ -1,0 +1,12 @@
+[Unit]
+Description=linux transparent proxy script
+After=network.target network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/ss-tproxy create
+ExecStop=/usr/bin/ss-tproxy delete
+
+[Install]
+WantedBy=multi-user.target
