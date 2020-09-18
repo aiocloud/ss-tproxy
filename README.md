@@ -27,7 +27,7 @@ apt install --no-install-recommends build-essential pkg-config autoconf libtool 
 cmake . || exit 1
 make -j4 || exit 1
 cd bin
-cp -f ss-redir /usr/bin
+cp -f ss-redir /usr/bin/ss-redir
 
 cd /opt
 git clone https://github.com/shadowsocksrr/shadowsocksr-libev -b Akkariiin/develop || exit 1
@@ -36,5 +36,5 @@ cd shadowsocksr-libev
 ./configure || exit 1
 make -j4 || exit 1
 cd src
-cp -f ss-redir /usr/bin
+cp -f ss-redir /usr/bin/ssr-redir
 ```
