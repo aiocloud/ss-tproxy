@@ -30,10 +30,11 @@ cd bin
 cp -f ss-redir /usr/bin
 
 cd /opt
-git clone https://github.com/shadowsocksr-backup/shadowsocksr-libev || exit 1
+git clone https://github.com/shadowsocksrr/shadowsocksr-libev -b Akkariiin/develop || exit 1
 cd shadowsocksr-libev
-cmake . || exit 1
+./autogen.sh || exit 1
+./configure || exit 1
 make -j4 || exit 1
 cd src
-cp -f ss_redir /usr/bin
+cp -f ss-redir /usr/bin
 ```
