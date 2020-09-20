@@ -37,4 +37,11 @@ cd shadowsocksr-libev
 make -j4 || exit 1
 cd src
 cp -f ss-redir /usr/bin/ssr-redir
+
+cd ~
+# cd /etc/ss-tproxy
+# nano /etc/ss-tproxy/ss-tproxy.conf
+# cd nodes
+# nano IPLC-SZHK-01
+# systemctl enable --now ss-tproxy
 ```
