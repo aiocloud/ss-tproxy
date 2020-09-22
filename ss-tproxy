@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source /etc/ss-tproxy/ss-tproxy.conf
-source /etc/ss-tproxy/nodes/$UDP_NODE
+source /etc/ss-tproxy/tcpnodes/$TCP_NODE
+source /etc/ss-tproxy/udpnodes/$UDP_NODE
 
 echo=echo
 for cmd in echo /bin/echo; do

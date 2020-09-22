@@ -11,8 +11,8 @@ cp -f ss-tproxy.service /etc/systemd/system
 mkdir /etc/ss-tproxy
 cp -f *.set /etc/ss-tproxy
 cp -f ss-tproxy.conf /etc/ss-tproxy
-mkdir /etc/ss-tproxy/nodes
-cp -f nodes/IPLC-SZHK-01 /etc/ss-tproxy/nodes
+cp -fr tcpnodes /etc/ss-tproxy
+cp -fr udpnodes /etc/ss-tproxy
 
 systemctl daemon-reload
 
