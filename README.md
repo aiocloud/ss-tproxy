@@ -1,4 +1,9 @@
 # ss-tproxy
+[![](https://img.shields.io/badge/Telegram-Group-blue)](https://t.me/aioCloud)
+[![](https://img.shields.io/badge/Telegram-Channel-green)](https://t.me/aioCloud_channel)
+
+我个人用的透明代理脚本
+
 ```bash
 cd ~
 git clone https://github.com/aiocloud/ss-tproxy || exit 1
