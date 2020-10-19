@@ -29,6 +29,8 @@ OUT_ALERT() {
 
 OUT_ERROR() {
     echo -e "${CRED}$1${CEND}"
+
+    exit 1
 }
 
 OUT_INFO() {
@@ -127,14 +129,14 @@ create_iptables() {
 
     iptables -t nat -A SSTP_RULE -m set --match-set privaddr dst -j RETURN
     iptables -t nat -A SSTP_RULE -m set --match-set chnroute dst -j RETURN
-    iptables -t nat -A SSTP_RULE -p tcp -m tcp --syn -j REDIRECT --to-ports 60080
+    iptables -t nat -A SSTP_RULE -p tcp -j REDIRECT --to-ports 60080
 
-    iptables -t nat -A SSTP_OUTPUT      -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p tcp -j SSTP_RULE
-    iptables -t nat -A SSTP_PREROUTING  -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p tcp -j SSTP_RULE
-    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -m conntrack --ctstate SNAT,DNAT -j RETURN
-    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p tcp  -m tcp --syn -j MASQUERADE
-    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p udp  -m conntrack --ctstate NEW -j MASQUERADE
-    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p icmp -m conntrack --ctstate NEW -j MASQUERADE
+    iptables -t nat -A SSTP_OUTPUT      -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
+    iptables -t nat -A SSTP_PREROUTING  -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
+    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -m conntrack --ctstate SNAT,DNAT   -j RETURN
+    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p tcp                             -j MASQUERADE
+    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p udp                             -j MASQUERADE
+    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p icmp                            -j MASQUERADE
 
     iptables -t nat -A OUTPUT -j SSTP_OUTPUT
     iptables -t nat -A PREROUTING -j SSTP_PREROUTING
