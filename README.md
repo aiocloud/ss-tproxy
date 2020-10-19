@@ -25,28 +25,34 @@ cd ~
 rm -fr ss-tproxy
 
 cd /opt
-git clone https://github.com/shadowsocks/shadowsocks-libev || exit 1
+git clone https://github.com/shadowsocks/shadowsocks-libev --recurse --depth 1 || exit 1
 cd shadowsocks-libev
-git submodule update --init || exit 1
 apt install --no-install-recommends build-essential pkg-config autoconf libtool cmake make gettext libpcre3-dev asciidoc xmlto libev-dev libc-ares-dev automake libmbedtls-dev libsodium-dev libssl-dev -y
-cmake . || exit 1
-make -j4 || exit 1
-cd bin
+./autogen.sh || exit 1
+./configure --disable-shared --enable-static || exit 1
+make -j$(($(nproc) + 1)) || exit 1
+cd src
 cp -f ss-redir /usr/bin/ss-redir
 
 cd /opt
-git clone https://github.com/shadowsocksrr/shadowsocksr-libev -b Akkariiin/develop || exit 1
+git clone https://github.com/shadowsocksrr/shadowsocksr-libev --recurse --depth 1 -b Akkariiin/develop || exit 1
 cd shadowsocksr-libev
 ./autogen.sh || exit 1
-./configure || exit 1
-make -j4 || exit 1
+./configure --disable-shared --enable-static || exit 1
+make -j$(($(nproc) + 1)) || exit 1
 cd src
 cp -f ss-redir /usr/bin/ssr-redir
+
+cd /opt
+rm -fr shadowsocks-libev
+rm -fr shadowsocksr-libev
 
 cd ~
 # cd /etc/ss-tproxy
 # nano /etc/ss-tproxy/ss-tproxy.conf
-# cd nodes
-# nano IPLC-SZHK-01
+# cd /etc/ss-tproxy/tcpnodes
+# nano ?
+# cd /etc/ss-tproxy/udpnodes
+# nano ?
 # systemctl enable --now ss-tproxy
 ```
