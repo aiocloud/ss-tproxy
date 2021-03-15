@@ -221,14 +221,18 @@ create() {
         fi
     done
 
-    if ! IsIPv4 "$TCP_ADDR"; then
-        TCP_ADDR=`dig "@$DNS" +short "A" $(echo "$TCP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
-        DIRECT_IP+=("$TCP_ADDR")
+    if [[ "$PROXYUDP" == "true" ]]; then
+        if ! IsIPv4 "$TCP_ADDR"; then
+            TCP_ADDR=`dig "@$DNS" +short "A" $(echo "$TCP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
+            DIRECT_IP+=("$TCP_ADDR")
+        fi
     fi
 
-    if ! IsIPv4 "$UDP_ADDR"; then
-        UDP_ADDR=`dig "@$DNS" +short "A" $(echo "$UDP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
-        DIRECT_IP+=("$UDP_ADDR")
+    if [[ "$PROXYUDP" == "true" ]]; then
+        if ! IsIPv4 "$UDP_ADDR"; then
+            UDP_ADDR=`dig "@$DNS" +short "A" $(echo "$UDP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
+            DIRECT_IP+=("$UDP_ADDR")
+        fi
     fi
 
     create_ipforward
