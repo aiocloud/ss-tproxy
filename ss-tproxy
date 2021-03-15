@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source /etc/ss-tproxy/ss-tproxy.conf
-source /etc/ss-tproxy/tcpnodes/$TCP_NODE
-source /etc/ss-tproxy/udpnodes/$UDP_NODE
+[[ "$PROXYTCP" == "true" ]] && source /etc/ss-tproxy/tcpnodes/$TCP_NODE
+[[ "$PROXYUDP" == "true" ]] && source /etc/ss-tproxy/udpnodes/$UDP_NODE
 
 echo=echo
 for cmd in echo /bin/echo; do
@@ -42,12 +42,14 @@ IsIPv4() {
 }
 
 create_client() {
-    if [[ "$UDP_TYPE" == "Shadowsocks" ]]; then
-        ss-redir -s "$UDP_ADDR" -p "$UDP_PORT" -k "$UDP_PASS" -m "$UDP_CIPH" -b 0.0.0.0 -l 60080 -t 300 -U </dev/null &>>/tmp/redir.log &
-    elif [[ "$UDP_TYPE" == "ShadowsocksR" ]]; then
-        ssr-redir -s "$UDP_ADDR" -p "$UDP_PORT" -k "$UDP_PASS" -m "$UDP_CIPH" -O "$UDP_PROT" -G "$UDP_PROTPARAM" -o "$UDP_OBFS" -g "$UDP_OBFSPARAM" -b 0.0.0.0 -l 60080 -t 300 -U </dev/null &>>/tmp/redir.log &
-    else
-        OUT_ERROR "不支持的 UDP 代理类型"
+    if [[ "$PROXYUDP" == "true" ]]; then
+            if [[ "$UDP_TYPE" == "Shadowsocks" ]]; then
+            ss-redir -s "$UDP_ADDR" -p "$UDP_PORT" -k "$UDP_PASS" -m "$UDP_CIPH" -b 0.0.0.0 -l 60080 -t 300 -U </dev/null &>>/tmp/redir.log &
+        elif [[ "$UDP_TYPE" == "ShadowsocksR" ]]; then
+            ssr-redir -s "$UDP_ADDR" -p "$UDP_PORT" -k "$UDP_PASS" -m "$UDP_CIPH" -O "$UDP_PROT" -G "$UDP_PROTPARAM" -o "$UDP_OBFS" -g "$UDP_OBFSPARAM" -b 0.0.0.0 -l 60080 -t 300 -U </dev/null &>>/tmp/redir.log &
+        else
+            OUT_ERROR "不支持的 UDP 代理类型"
+        fi
     fi
 
     for ((i = 1; i <= $TCP_PROC; i++)); do
@@ -100,7 +102,7 @@ update_chnroute() {
 }
 
 create_dns2tcp() {
-    if [ ! -f "/usr/bin/dns2tcp" ]; then
+    if [ -f "/usr/bin/dns2tcp" ]; then
         dns2tcp -L "$CLIENTDNS" -R "$REMOTEDNS" </dev/null &>>/tmp/dns2tcp.log &
     fi
 }
@@ -110,82 +112,90 @@ delete_dns2tcp() {
 }
 
 create_iptables() {
-    iptables -t nat -N SSTP_RULE
-    iptables -t nat -N SSTP_OUTPUT
-    iptables -t nat -N SSTP_PREROUTING
-    iptables -t nat -N SSTP_POSTROUTING
+    if [[ "$PROXYTCP" == "true" ]]; then
+        iptables -t nat -N SSTP_RULE
+        iptables -t nat -N SSTP_OUTPUT
+        iptables -t nat -N SSTP_PREROUTING
+        iptables -t nat -N SSTP_POSTROUTING
 
-    for drthost in "${DIRECT_LAN[@]}"; do
-        iptables -t nat -A SSTP_RULE -s $drthost -j RETURN
-    done
+        for drthost in "${DIRECT_LAN[@]}"; do
+            iptables -t nat -A SSTP_RULE -s $drthost -j RETURN
+        done
 
-    for drthost in "${DIRECT_IP[@]}"; do
-        iptables -t nat -A SSTP_RULE -d $drthost -j RETURN
-    done
+        for drthost in "${DIRECT_IP[@]}"; do
+            iptables -t nat -A SSTP_RULE -d $drthost -j RETURN
+        done
 
-    for drthost in "${DIRECT_DNS[@]}"; do
-        iptables -t nat -A SSTP_RULE -d $drthost -j RETURN
-    done
+        for drthost in "${DIRECT_DNS[@]}"; do
+            iptables -t nat -A SSTP_RULE -d $drthost -j RETURN
+        done
 
-    iptables -t nat -A SSTP_RULE -m set --match-set privaddr dst -j RETURN
-    iptables -t nat -A SSTP_RULE -m set --match-set chnroute dst -j RETURN
-    iptables -t nat -A SSTP_RULE -p tcp -j REDIRECT --to-ports 60080
+        iptables -t nat -A SSTP_RULE -m set --match-set privaddr dst -j RETURN
+        iptables -t nat -A SSTP_RULE -m set --match-set chnroute dst -j RETURN
+        iptables -t nat -A SSTP_RULE -p tcp -j REDIRECT --to-ports 60080
 
-    iptables -t nat -A SSTP_OUTPUT      -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
-    iptables -t nat -A SSTP_PREROUTING  -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
-    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -m conntrack --ctstate SNAT,DNAT   -j RETURN
-    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p tcp                             -j MASQUERADE
-    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p udp                             -j MASQUERADE
-    iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p icmp                            -j MASQUERADE
+        iptables -t nat -A SSTP_OUTPUT      -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
+        iptables -t nat -A SSTP_PREROUTING  -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
+        iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -m conntrack --ctstate SNAT,DNAT   -j RETURN
+        iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p tcp                             -j MASQUERADE
+        iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p udp                             -j MASQUERADE
+        iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p icmp                            -j MASQUERADE
 
-    iptables -t nat -A OUTPUT -j SSTP_OUTPUT
-    iptables -t nat -A PREROUTING -j SSTP_PREROUTING
-    iptables -t nat -A POSTROUTING -j SSTP_POSTROUTING
+        [[ "$PROXYSELF"  == "true" ]] && iptables -t nat -A OUTPUT -j SSTP_OUTPUT
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -A PREROUTING -j SSTP_PREROUTING
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -A POSTROUTING -j SSTP_POSTROUTING
+    fi
 
-    ip -4 route add local default dev lo table 100
-    ip -4 rule  add fwmark 0x01          table 100
+    if [[ "$PROXYUDP" == "true" ]]; then
+        ip -4 route add local default dev lo table 100
+        ip -4 rule  add fwmark 0x01          table 100
 
-    iptables -t mangle -N SSTP_RULE
-    iptables -t mangle -N SSTP_OUTPUT
-    iptables -t mangle -N SSTP_PREROUTING
+        iptables -t mangle -N SSTP_RULE
+        iptables -t mangle -N SSTP_OUTPUT
+        iptables -t mangle -N SSTP_PREROUTING
 
-    iptables -t mangle -A SSTP_RULE -j CONNMARK --restore-mark
-    iptables -t mangle -A SSTP_RULE -m mark --mark 0x01 -j RETURN
+        iptables -t mangle -A SSTP_RULE -j CONNMARK --restore-mark
+        iptables -t mangle -A SSTP_RULE -m mark --mark 0x01 -j RETURN
 
-    for drthost in "${DIRECT_LAN[@]}"; do
-        iptables -t mangle -A SSTP_RULE -s $drthost -j RETURN
-    done
+        for drthost in "${DIRECT_LAN[@]}"; do
+            iptables -t mangle -A SSTP_RULE -s $drthost -j RETURN
+        done
 
-    for drthost in "${DIRECT_IP[@]}"; do
-        iptables -t mangle -A SSTP_RULE -d $drthost -j RETURN
-    done
+        for drthost in "${DIRECT_IP[@]}"; do
+            iptables -t mangle -A SSTP_RULE -d $drthost -j RETURN
+        done
 
-    for drthost in "${DIRECT_DNS[@]}"; do
-        iptables -t mangle -A SSTP_RULE -d $drthost -j RETURN
-    done
+        for drthost in "${DIRECT_DNS[@]}"; do
+            iptables -t mangle -A SSTP_RULE -d $drthost -j RETURN
+        done
 
-    iptables -t mangle -A SSTP_RULE -m set --match-set privaddr dst -j RETURN
-    iptables -t mangle -A SSTP_RULE -m set --match-set chnroute dst -j RETURN
-    iptables -t mangle -A SSTP_RULE -p udp -m conntrack --ctstate NEW -j MARK --set-mark 0x01
-    iptables -t mangle -A SSTP_RULE -j CONNMARK --save-mark
+        iptables -t mangle -A SSTP_RULE -m set --match-set privaddr dst -j RETURN
+        iptables -t mangle -A SSTP_RULE -m set --match-set chnroute dst -j RETURN
+        iptables -t mangle -A SSTP_RULE -p udp -m conntrack --ctstate NEW -j MARK --set-mark 0x01
+        iptables -t mangle -A SSTP_RULE -j CONNMARK --save-mark
 
-    iptables -t mangle -A SSTP_OUTPUT     -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p udp -j SSTP_RULE
-    iptables -t mangle -A SSTP_PREROUTING -m mark !     --mark 0x01                         -i lo  -j RETURN
-    iptables -t mangle -A SSTP_PREROUTING -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p udp -j SSTP_RULE
-    iptables -t mangle -A SSTP_PREROUTING -m mark       --mark 0x01                         -p udp -j TPROXY --on-port 60080 --on-ip 127.0.0.1
+        iptables -t mangle -A SSTP_OUTPUT     -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p udp -j SSTP_RULE
+        iptables -t mangle -A SSTP_PREROUTING -m mark !     --mark 0x01                         -i lo  -j RETURN
+        iptables -t mangle -A SSTP_PREROUTING -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p udp -j SSTP_RULE
+        iptables -t mangle -A SSTP_PREROUTING -m mark       --mark 0x01                         -p udp -j TPROXY --on-port 60080 --on-ip 127.0.0.1
 
-    iptables -t mangle -A OUTPUT     -j SSTP_OUTPUT
-    iptables -t mangle -A PREROUTING -j SSTP_PREROUTING
+        [[ "$PROXYSELF"  == "true" ]] && iptables -t mangle -A OUTPUT     -j SSTP_OUTPUT
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -A PREROUTING -j SSTP_PREROUTING
+    fi
 }
 
 delete_iptables() {
-    iptables -t nat -F > /dev/null 2>&1
-    iptables -t nat -X > /dev/null 2>&1
-    iptables -t mangle -F > /dev/null 2>&1
-    iptables -t mangle -X > /dev/null 2>&1
+    if [[ "$PROXYTCP" == "true" ]]; then
+        iptables -t nat -F > /dev/null 2>&1
+        iptables -t nat -X > /dev/null 2>&1
+    fi
 
-    ip -4 rule  del   table 100 > /dev/null 2>&1
-    ip -4 route flush table 100 > /dev/null 2>&1
+    if [[ "$PROXYUDP" == "true" ]]; then
+        iptables -t mangle -F > /dev/null 2>&1
+        iptables -t mangle -X > /dev/null 2>&1
+        ip -4 rule  del   table 100 > /dev/null 2>&1
+        ip -4 route flush table 100 > /dev/null 2>&1
+    fi
 }
 
 create() {
@@ -204,7 +214,7 @@ create() {
         if IsIPv4 "$drthost"; then
             DIRECT_IP+=("$drthost")
         else
-            drtaddr=`dig "@1.2.4.8" +short "A" "$drthost" | grep -Ev '^;|\.$' | head -n1`
+            drtaddr=`dig "@$DNS" +short "A" "$drthost" | grep -Ev '^;|\.$' | head -n1`
 
             if ! IsIPv4 "$drtaddr"; then
                 OUT_ERROR "无法解析 $drthost 域名"
@@ -216,12 +226,12 @@ create() {
     done
 
     if ! IsIPv4 "$TCP_ADDR"; then
-        TCP_ADDR=`dig "@1.2.4.8" +short "A" $(echo "$TCP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
+        TCP_ADDR=`dig "@$DNS" +short "A" $(echo "$TCP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
         DIRECT_IP+=("$TCP_ADDR")
     fi
 
     if ! IsIPv4 "$UDP_ADDR"; then
-        UDP_ADDR=`dig "@1.2.4.8" +short "A" $(echo "$UDP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
+        UDP_ADDR=`dig "@$DNS" +short "A" $(echo "$UDP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
         DIRECT_IP+=("$UDP_ADDR")
     fi
 
@@ -240,7 +250,7 @@ delete() {
     delete_dns2tcp
     delete_client
 
-    iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+    # iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 }
 
 reboot() {
@@ -253,6 +263,16 @@ status() {
     [ $(netstat -anpu | grep -E ":60080[ \t]" | wc -l) -ne 0 ] && echo "pxy/udp: $CGREEN[running]$CEND" || echo "pxy/udp: $CRED[stopped]$CEND"
 }
 
+help() {
+    echo "ss-tproxy create"
+    echo "ss-tproxy delete"
+    echo "ss-tproxy reboot"
+    echo "ss-tproxy status"
+    echo "ss-tproxy delete-iptables"
+    echo "ss-tproxy delete-chnroute"
+    echo "ss-tproxy update-chnroute"
+}
+
 case "$1" in
     create)          create; status;;
     delete)          delete; status;;
@@ -261,7 +281,7 @@ case "$1" in
     delete-iptables) delete_iptables;;
     delete-chnroute) delete_chnroute;;
     update-chnroute) update_chnroute;;
-    *) exit 1;;
+    *) help;;
 esac
 
 exit 0
