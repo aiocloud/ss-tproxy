@@ -237,7 +237,7 @@ create() {
         fi
     done
 
-    if [[ "$PROXYUDP" == "true" ]]; then
+    if [[ "$PROXYTCP" == "true" ]]; then
         if ! IsIPv4 "$TCP_ADDR"; then
             TCP_ADDR=`dig "@$DNS" +short "A" $(echo "$TCP_ADDR" | awk -F ':' '{print $1}') | grep -Ev '^;|\.$' | head -n1`
             DIRECT_IP+=("$TCP_ADDR")
@@ -290,9 +290,9 @@ help() {
 }
 
 case "$1" in
-    create)          create; status;;
-    delete)          delete; status;;
-    reboot)          reboot; status;;
+    create)          create; sleep 2; status;;
+    delete)          delete; sleep 2; status;;
+    reboot)          reboot; sleep 2; status;;
     status)          status;;
     delete-iptables) delete_iptables;;
     delete-chnroute) delete_chnroute;;
