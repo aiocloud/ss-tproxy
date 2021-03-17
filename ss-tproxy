@@ -185,10 +185,26 @@ create_iptables() {
 }
 
 delete_iptables() {
-    iptables -t nat -F > /dev/null 2>&1
-    iptables -t nat -X > /dev/null 2>&1
-    iptables -t mangle -F > /dev/null 2>&1
-    iptables -t mangle -X > /dev/null 2>&1
+    iptables -t nat -D POSTROUTING -j SSTP_POSTROUTING > /dev/null 2>&1
+    iptables -t nat -D PREROUTING -j SSTP_PREROUTING   > /dev/null 2>&1
+    iptables -t nat -D OUTPUT -j SSTP_OUTPUT           > /dev/null 2>&1
+    iptables -t nat -F SSTP_POSTROUTING                > /dev/null 2>&1
+    iptables -t nat -F SSTP_PREROUTING                 > /dev/null 2>&1
+    iptables -t nat -F SSTP_OUTPUT                     > /dev/null 2>&1
+    iptables -t nat -F SSTP_RULE                       > /dev/null 2>&1
+    iptables -t nat -X SSTP_POSTROUTING                > /dev/null 2>&1
+    iptables -t nat -X SSTP_PREROUTING                 > /dev/null 2>&1
+    iptables -t nat -X SSTP_OUTPUT                     > /dev/null 2>&1
+    iptables -t nat -X SSTP_RULE                       > /dev/null 2>&1
+
+    iptables -t mangle -D PREROUTING -j SSTP_PREROUTING > /dev/null 2>&1
+    iptables -t mangle -D OUTPUT     -j SSTP_OUTPUT     > /dev/null 2>&1
+    iptables -t mangle -F SSTP_PREROUTING               > /dev/null 2>&1
+    iptables -t mangle -F SSTP_OUTPUT                   > /dev/null 2>&1
+    iptables -t mangle -F SSTP_RULE                     > /dev/null 2>&1
+    iptables -t mangle -X SSTP_PREROUTING               > /dev/null 2>&1
+    iptables -t mangle -X SSTP_OUTPUT                   > /dev/null 2>&1
+    iptables -t mangle -X SSTP_RULE                     > /dev/null 2>&1
 
     ip -4 rule  del   table 100 > /dev/null 2>&1
     ip -4 route flush table 100 > /dev/null 2>&1
