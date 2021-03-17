@@ -2,8 +2,6 @@
 [![](https://img.shields.io/badge/Telegram-Group-blue)](https://t.me/aioCloud)
 [![](https://img.shields.io/badge/Telegram-Channel-green)](https://t.me/aioCloud_channel)
 
-我个人用的透明代理脚本
-
 ```bash
 cd ~
 git clone https://github.com/aiocloud/ss-tproxy || exit 1
@@ -27,7 +25,8 @@ rm -fr ss-tproxy
 cd /opt
 git clone https://github.com/shadowsocks/shadowsocks-libev --recurse --depth 1 || exit 1
 cd shadowsocks-libev
-apt install --no-install-recommends build-essential pkg-config autoconf libtool cmake make gettext libpcre3-dev asciidoc xmlto libev-dev libc-ares-dev automake libmbedtls-dev libsodium-dev libssl-dev zlib1g-dev -y
+apt update || exit 1
+apt install --no-install-recommends git ipset psmisc dnsutils build-essential pkg-config autoconf libtool cmake make gettext libpcre3-dev asciidoc xmlto libev-dev libc-ares-dev automake libmbedtls-dev libsodium-dev libssl-dev zlib1g-dev -y || exit 1
 ./autogen.sh || exit 1
 ./configure --disable-shared --enable-static || exit 1
 make -j$(($(nproc) + 1)) || exit 1

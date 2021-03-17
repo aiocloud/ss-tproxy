@@ -5,7 +5,7 @@ rm -fr shadowsocks-libev
 rm -fr shadowsocksr-libev
 
 apt update || exit 1
-apt install --no-install-recommends git ipset psmisc build-essential pkg-config autoconf libtool cmake make gettext libpcre3-dev asciidoc xmlto libev-dev libc-ares-dev automake libmbedtls-dev libsodium-dev libssl-dev zlib1g-dev -y || exit 1
+apt install --no-install-recommends git ipset psmisc dnsutils build-essential pkg-config autoconf libtool cmake make gettext libpcre3-dev asciidoc xmlto libev-dev libc-ares-dev automake libmbedtls-dev libsodium-dev libssl-dev zlib1g-dev -y || exit 1
 
 cd /opt
 git clone https://github.com.cnpmjs.org/aiocloud/ss-tproxy || exit 1
