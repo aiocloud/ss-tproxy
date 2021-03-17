@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+cd /opt
+rm -fr ss-tproxy
+rm -fr shadowsocks-libev
+rm -fr shadowsocksr-libev
+
 apt update || exit 1
 apt install --no-install-recommends git ipset psmisc build-essential pkg-config autoconf libtool cmake make gettext libpcre3-dev asciidoc xmlto libev-dev libc-ares-dev automake libmbedtls-dev libsodium-dev libssl-dev zlib1g-dev -y || exit 1
 
@@ -22,6 +27,7 @@ sed -i 's/github.com/github.com.cnpmjs.org/' .gitmodules
 git submodule update --init
 ./autogen.sh || exit 1
 ./configure --disable-shared --enable-static || exit 1
+make -j$(nproc) || exit 1
 cd src
 cp -f ss-redir /usr/bin/ss-redir
 
@@ -30,6 +36,7 @@ git clone https://github.com.cnpmjs.org/shadowsocksrr/shadowsocksr-libev --depth
 cd shadowsocksr-libev
 ./autogen.sh || exit 1
 ./configure --disable-shared --enable-static || exit 1
+make -j$(nproc) || exit 1
 cd src
 cp -f ss-redir /usr/bin/ssr-redir
 
