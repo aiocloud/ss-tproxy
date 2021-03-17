@@ -115,8 +115,8 @@ create_iptables() {
     if [[ "$PROXYTCP" == "true" ]]; then
         iptables -t nat -N SSTP_RULE
         iptables -t nat -N SSTP_OUTPUT
-        iptables -t nat -N SSTP_PREROUTING
-        iptables -t nat -N SSTP_POSTROUTING
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -N SSTP_PREROUTING
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -N SSTP_POSTROUTING
 
         for drthost in "${DIRECT_LAN[@]}"; do
             iptables -t nat -A SSTP_RULE -s $drthost -j RETURN
@@ -151,8 +151,8 @@ create_iptables() {
         ip -4 rule  add fwmark 0x01          table 100
 
         iptables -t mangle -N SSTP_RULE
-        iptables -t mangle -N SSTP_OUTPUT
-        iptables -t mangle -N SSTP_PREROUTING
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -N SSTP_OUTPUT
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -N SSTP_PREROUTING
 
         iptables -t mangle -A SSTP_RULE -j CONNMARK --restore-mark
         iptables -t mangle -A SSTP_RULE -m mark --mark 0x01 -j RETURN
