@@ -134,12 +134,12 @@ create_iptables() {
         iptables -t nat -A SSTP_RULE -m set --match-set chnroute dst -j RETURN
         iptables -t nat -A SSTP_RULE -p tcp -j REDIRECT --to-ports 60080
 
-        iptables -t nat -A SSTP_OUTPUT      -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
-        iptables -t nat -A SSTP_PREROUTING  -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
-        iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -m conntrack --ctstate SNAT,DNAT   -j RETURN
-        iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p tcp                             -j MASQUERADE
-        iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p udp                             -j MASQUERADE
-        iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p icmp                            -j MASQUERADE
+        [[ "$PROXYSELF"  == "true" ]] && iptables -t nat -A SSTP_OUTPUT      -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -A SSTP_PREROUTING  -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p tcp          -j SSTP_RULE
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -m conntrack --ctstate SNAT,DNAT   -j RETURN
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p tcp                             -j MASQUERADE
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p udp                             -j MASQUERADE
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -A SSTP_POSTROUTING -m addrtype ! --src-type LOCAL -p icmp                            -j MASQUERADE
 
         [[ "$PROXYSELF"  == "true" ]] && iptables -t nat -A OUTPUT -j SSTP_OUTPUT
         [[ "$PROXYOTHER" == "true" ]] && iptables -t nat -A PREROUTING -j SSTP_PREROUTING
@@ -174,10 +174,10 @@ create_iptables() {
         iptables -t mangle -A SSTP_RULE -p udp -m conntrack --ctstate NEW -j MARK --set-mark 0x01
         iptables -t mangle -A SSTP_RULE -j CONNMARK --save-mark
 
-        iptables -t mangle -A SSTP_OUTPUT     -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p udp -j SSTP_RULE
-        iptables -t mangle -A SSTP_PREROUTING -m mark !     --mark 0x01                         -i lo  -j RETURN
-        iptables -t mangle -A SSTP_PREROUTING -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p udp -j SSTP_RULE
-        iptables -t mangle -A SSTP_PREROUTING -m mark       --mark 0x01                         -p udp -j TPROXY --on-port 60080 --on-ip 127.0.0.1
+        [[ "$PROXYSELF"  == "true" ]] && iptables -t mangle -A SSTP_OUTPUT     -m addrtype   --src-type LOCAL ! --dst-type LOCAL -p udp -j SSTP_RULE
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -A SSTP_PREROUTING -m mark !     --mark 0x01                         -i lo  -j RETURN
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -A SSTP_PREROUTING -m addrtype ! --src-type LOCAL ! --dst-type LOCAL -p udp -j SSTP_RULE
+        [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -A SSTP_PREROUTING -m mark       --mark 0x01                         -p udp -j TPROXY --on-port 60080 --on-ip 127.0.0.1
 
         [[ "$PROXYSELF"  == "true" ]] && iptables -t mangle -A OUTPUT     -j SSTP_OUTPUT
         [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -A PREROUTING -j SSTP_PREROUTING
