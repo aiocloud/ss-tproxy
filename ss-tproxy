@@ -151,7 +151,7 @@ create_iptables() {
         ip -4 rule  add fwmark 0x01          table 100
 
         iptables -t mangle -N SSTP_RULE
-        [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -N SSTP_OUTPUT
+        [[ "$PROXYSELF"  == "true" ]] && iptables -t mangle -N SSTP_OUTPUT
         [[ "$PROXYOTHER" == "true" ]] && iptables -t mangle -N SSTP_PREROUTING
 
         iptables -t mangle -A SSTP_RULE -j CONNMARK --restore-mark
